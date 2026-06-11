@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstdio>
 
+
 struct LinearAllocator {
     std::uint8_t* buffer; // points to start of the allocated memory
     std::size_t capacity; // total size of the allocated memory
@@ -38,6 +39,28 @@ struct LinearAllocator {
 
 int main() {   
     LinearAllocator allocator(1024); // Create a linear allocator with 1KB of memory
+
+    // Allocate some memory
+    void* ptr1 = allocator.allocate(256); // Allocate 256 bytes
+    if (ptr1) {
+        printf("Allocated 256 bytes at address: %p\n", ptr1);
+    } else {
+        printf("Failed to allocate memory\n");
+    }
+    
+    void* ptr2 = allocator.allocate(128); // Allocate 128 bytes
+    if (ptr2) {
+        printf("Allocated 128 bytes at address: %p\n", ptr2);
+    } else {
+        printf("Failed to allocate memory\n");
+    }
+
+    void* ptr3 = allocator.allocate(64); // Allocate 64 bytes
+    if (ptr3) {
+        printf("Allocated 64 bytes at address: %p\n", ptr3);
+    } else {
+        printf("Failed to allocate memory\n");
+    }
 
     return 0;
 }
