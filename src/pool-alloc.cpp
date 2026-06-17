@@ -32,3 +32,34 @@ struct PoolAllocator {
         }
     }
 };
+
+int main() {
+    PoolAllocator allocator(64, 16); // Create a pool allocator with block size of 64 bytes and 16 blocks
+
+    // Allocate some blocks
+    void* ptr1 = allocator.allocate(); // Allocate first block
+    if (ptr1) {
+        printf("Allocated block at address: %p\n", ptr1);
+    } else {
+        printf("Failed to allocate block\n");
+    }
+
+    void* ptr2 = allocator.allocate(); // Allocate second block
+    if (ptr2) {
+        printf("Allocated block at address: %p\n", ptr2);
+    } else {
+        printf("Failed to allocate block\n");
+    }
+
+    allocator.deallocate(ptr1); // Deallocate the first block
+    printf("Deallocated block at address: %p\n", ptr1);
+
+    void* ptr3 = allocator.allocate(); // Allocate another block (should reuse the first block)
+    if (ptr3) {
+        printf("Allocated block at address: %p\n", ptr3);
+    } else {
+        printf("Failed to allocate block\n");
+    }
+
+    return 0;
+}
