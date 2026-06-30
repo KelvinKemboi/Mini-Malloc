@@ -3,32 +3,27 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <vector>
 
+// LIFO bump-pointer allocator. Like LinearAllocator but supports saving a
+// Marker and rolling back to it, enabling nested temporary scratch regions.
 struct StackAllocator {
-    std::vector<std::uint8_t> buffer; // buffer to hold the allocated memory
-    std::size_t offset; // current offset in the buffer for the next allocation
+    using Marker = std::size_t;
 
-    // Constructor to initialize the allocator with a specified size
-    StackAllocator(std::size_t size): buffer(size), offset(0) {}
+    StackAllocator(std::size_t size);
+    ~StackAllocator();
 
-    // Allocate memory with specified size and alignment
-    void* allocate(std::size_t size, std::size_t alignment = alignof(std::max_align_t)) {
-        std::size_t currentAddress = reinterpret_cast<std::size_t>(buffer.data() + offset);
-        std::size_t padding = (alignment - (currentAddress % alignment)) % alignment;
-        if (offset + padding + size > buffer.size()) {
-            return nullptr;
-        }
-        offset += padding;
-        void* ptr = buffer.data() + offset;
-        offset += size;
-        return ptr;
-    }
+    StackAllocator(const StackAllocator&)            = delete;
+    StackAllocator& operator=(const StackAllocator&) = delete;
 
-    // Reset the allocator to reuse the buffer
-    void reset() {
-        offset = 0;
-    }
+    void*  allocate(std::size_t size, std::size_t alignment = alignof(std::max_align_t));
+    Marker getMarker() const;
+    void   freeToMarker(Marker marker);
+    void   reset();
+
+private:
+    std::uint8_t* m_buffer;
+    std::size_t   m_capacity;
+    std::size_t   m_offset;
 };
 
 #endif // STACK_ALLOC_H

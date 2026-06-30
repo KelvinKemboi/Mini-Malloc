@@ -3,38 +3,25 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <vector>
 
+// Fixed-size block allocator backed by an intrusive singly-linked free list.
+// Both allocate() and deallocate() are O(1). blockSize must be at least
+// sizeof(void*) so each free block can hold the next-pointer.
 struct PoolAllocator {
-    std::vector<std::uint8_t> buffer; // buffer to hold the allocated memory
-    std::size_t blockSize; // size of each block in the pool
-    std::size_t blockCount; // total number of blocks in the pool
-    std::vector<bool> freeBlocks; // vector to track free blocks
+    PoolAllocator(std::size_t blockSize, std::size_t blockCount);
+    ~PoolAllocator();
 
-    // Constructor to initialize the allocator with a specified block size and count
-    PoolAllocator(std::size_t blockSize, std::size_t blockCount)
-        : buffer(blockSize * blockCount), blockSize(blockSize), blockCount(blockCount), freeBlocks(blockCount, true) {}
+    PoolAllocator(const PoolAllocator&)            = delete;
+    PoolAllocator& operator=(const PoolAllocator&) = delete;
 
-    // Allocate a block of memory from the pool
-    void* allocate() {
-        for (std::size_t i = 0; i < blockCount; ++i) {
-            if (freeBlocks[i]) {
-                freeBlocks[i] = false;
-                return buffer.data() + i * blockSize;
-            }
-        }
-        return nullptr;
-    }
+    void* allocate();
+    void  deallocate(void* ptr);
 
-    // Deallocate a block of memory back to the pool
-    void deallocate(void* ptr) {
-        std::uintptr_t address = reinterpret_cast<std::uintptr_t>(ptr);
-        std::uintptr_t baseAddress = reinterpret_cast<std::uintptr_t>(buffer.data());
-        if (address >= baseAddress && address < baseAddress + buffer.size()) {
-            std::size_t index = (address - baseAddress) / blockSize;
-            freeBlocks[index] = true;
-        }
-    }
+private:
+    std::uint8_t* m_buffer;
+    std::size_t   m_blockSize;
+    std::size_t   m_blockCount;
+    void*         m_freeList; // head of the intrusive free list
 };
 
 #endif // POOL_ALLOC_H
